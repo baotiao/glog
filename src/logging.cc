@@ -400,7 +400,8 @@ class LogFileObject : public base::Logger {
   // Actually create a logfile using the value of base_filename_ and the
   // supplied argument time_pid_string
   // REQUIRES: lock_ is held
-  bool CreateLogfile(const string& time_pid_string);
+  //bool CreateLogfile(const string& time_pid_string);
+  bool CreateLogfile();
 };
 
 }  // namespace
@@ -854,11 +855,10 @@ void LogFileObject::FlushUnlocked(){
   next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
 }
 
-bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_+filename_extension_+
-                           time_pid_string;
+bool LogFileObject::CreateLogfile() {
+  string string_filename = base_filename_+filename_extension_;
   const char* filename = string_filename.c_str();
-  int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0664);
+  int fd = open(filename, O_WRONLY | O_CREAT, 0664);
   if (fd == -1) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
@@ -922,13 +922,13 @@ void LogFileObject::Write(bool force_flush,
     return;
   }
 
-  if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
-      PidHasChanged()) {
-    if (file_ != NULL) fclose(file_);
-    file_ = NULL;
-    file_length_ = bytes_since_flush_ = 0;
-    rollover_attempt_ = kRolloverAttemptFrequency-1;
-  }
+  //if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
+  //    PidHasChanged()) {
+  //  if (file_ != NULL) fclose(file_);
+  //  file_ = NULL;
+  //  file_length_ = bytes_since_flush_ = 0;
+  //  rollover_attempt_ = kRolloverAttemptFrequency-1;
+  //}
 
   // If there's no destination file, make one before outputting
   if (file_ == NULL) {
@@ -941,25 +941,26 @@ void LogFileObject::Write(bool force_flush,
     struct ::tm tm_time;
     localtime_r(&timestamp, &tm_time);
 
-    // The logfile's filename will have the date/time & pid in it
-    ostringstream time_pid_stream;
-    time_pid_stream.fill('0');
-    time_pid_stream << 1900+tm_time.tm_year
-                    << setw(2) << 1+tm_time.tm_mon
-                    << setw(2) << tm_time.tm_mday
-                    << '-'
-                    << setw(2) << tm_time.tm_hour
-                    << setw(2) << tm_time.tm_min
-                    << setw(2) << tm_time.tm_sec
-                    << '.'
-                    << GetMainThreadPid();
-    const string& time_pid_string = time_pid_stream.str();
+    //// The logfile's filename will have the date/time & pid in it
+    //ostringstream time_pid_stream;
+    //time_pid_stream.fill('0');
+    //time_pid_stream << 1900+tm_time.tm_year
+    //                << setw(2) << 1+tm_time.tm_mon
+    //                << setw(2) << tm_time.tm_mday
+    //                << '-'
+    //                << setw(2) << tm_time.tm_hour
+    //                << setw(2) << tm_time.tm_min
+    //                << setw(2) << tm_time.tm_sec
+    //                << '.'
+    //                << GetMainThreadPid();
+    //const string& time_pid_string = time_pid_stream.str();
 
     if (base_filename_selected_) {
-      if (!CreateLogfile(time_pid_string)) {
+      if (!CreateLogfile()) {
         perror("Could not create log file");
-        fprintf(stderr, "COULD NOT CREATE LOGFILE '%s'!\n",
-                time_pid_string.c_str());
+        //fprintf(stderr, "COULD NOT CREATE LOGFILE '%s'!\n",
+        //        time_pid_string.c_str());
+        fprintf(stderr, "COULD NOT CREATE LOGFILE!\n");
         return;
       }
     } else {
@@ -999,7 +1000,7 @@ void LogFileObject::Write(bool force_flush,
            dir != log_dirs.end();
            ++dir) {
         base_filename_ = *dir + "/" + stripped_filename;
-        if ( CreateLogfile(time_pid_string) ) {
+        if ( CreateLogfile() ) {
           success = true;
           break;
         }
@@ -1007,8 +1008,9 @@ void LogFileObject::Write(bool force_flush,
       // If we never succeeded, we have to give up
       if ( success == false ) {
         perror("Could not create logging file");
-        fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE %s!",
-                time_pid_string.c_str());
+        fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE!");
+        //fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE %s!",
+        //        time_pid_string.c_str());
         return;
       }
     }
