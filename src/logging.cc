@@ -989,7 +989,7 @@ void LogFileObject::Write(bool force_flush,
 
       stripped_filename = stripped_filename+'.'+hostname+'.'
                           +uidname+".log."
-                          +LogSeverityNames[severity_]+'.';
+                          +LogSeverityNames[severity_];
       // We're going to (potentially) try to put logs in several different dirs
       const vector<string> & log_dirs = GetLoggingDirectories();
 
