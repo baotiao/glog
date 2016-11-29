@@ -728,8 +728,9 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
   if ( FLAGS_logtostderr ) {           // global flag: never log to file
     ColoredWriteToStderr(severity, message, len);
   } else {
-    for (int i = severity; i >= 0; --i)
-      LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
+    //for (int i = severity; i >= 0; --i)
+    //  LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
+    LogDestination::MaybeLogToLogfile(severity, timestamp, message, len);
   }
 }
 
